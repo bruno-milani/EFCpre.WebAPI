@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EFCpre.Dominio;
+using EFCpre.Repo;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace EFCpre.WebAPI.Controllers
@@ -18,9 +21,11 @@ namespace EFCpre.WebAPI.Controllers
 
         private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        private readonly HeroiContext _context;
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, HeroiContext Context)
         {
             _logger = logger;
+            _context = Context;
         }
 
         [HttpGet]
@@ -34,6 +39,47 @@ namespace EFCpre.WebAPI.Controllers
                 Summary = Summaries[rng.Next(Summaries.Length)]
             })
             .ToArray();
+        }
+
+        [HttpGet("{nameHero}")]
+        public ActionResult InsertHero(string nameHero)
+        {
+            try
+            {
+                var heroi = new Heroi { Nome = nameHero };
+
+                _context.Herois.Add(heroi);
+                _context.SaveChangesAsync();
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return Ok();
+            }
+        }
+
+        [HttpGet("Filtro/{Id}")]
+        public ActionResult GetIdHero(int Id)
+        {
+            var listHeroi = _context.Herois
+                                    .Where(h => h.Id == Id)
+                                    .ToList();
+
+            return Ok(listHeroi);
+        }
+
+        [HttpGet("Delete/{Id}")]
+        public ActionResult DeleteHero(int Id)
+        {
+            var Heroi = _context.Herois
+                                .Where(h => h.Id == Id)
+                                .SingleOrDefault();
+
+            _context.Herois.Remove(Heroi);
+            _context.SaveChangesAsync();
+
+            return Ok();
         }
     }
 }
